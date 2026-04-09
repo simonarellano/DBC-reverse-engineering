@@ -1,8 +1,8 @@
-# ⚙️ Transmisión — VW Passat CC 2012
+# Transmisión — VW Passat CC 2012
 
 Documentación de los IDs y señales CAN relacionados con la transmisión automática DSG (DQ250).
 
-> **Estado:** 🔬 En progreso — las señales marcadas con ⚠️ aún no han sido validadas completamente.
+> **Estado:** En progreso — las señales marcadas con ⚠️ aún no han sido validadas completamente.
 
 ---
 
