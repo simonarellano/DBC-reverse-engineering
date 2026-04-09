@@ -1,6 +1,6 @@
 # DBC Reverse Engineering — CAN Bus
 
-Repositorio colaborativo para documentar hallazgos de ingeniería inversa sobre las líneas CAN bus de distintos vehículos. El objetivo principal es capturar, decodificar y compartir el significado de los mensajes CAN (IDs, señales, valores) de cada vehículo analizado.
+Repositorio para documentar hallazgos de ingeniería inversa sobre las líneas CAN bus de distintos vehículos. El objetivo principal es capturar, decodificar y compartir el significado de los mensajes CAN (IDs, señales, valores) de cada vehículo analizado.
 
 ---
 
