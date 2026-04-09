@@ -1,10 +1,10 @@
-# 🚗 DBC Reverse Engineering — CAN Bus
+# DBC Reverse Engineering — CAN Bus
 
 Repositorio colaborativo para documentar hallazgos de ingeniería inversa sobre las líneas CAN bus de distintos vehículos. El objetivo principal es capturar, decodificar y compartir el significado de los mensajes CAN (IDs, señales, valores) de cada vehículo analizado.
 
 ---
 
-## 🎯 Objetivos
+## Objetivos
 
 - **Documentar** los IDs CAN y las señales identificadas en cada vehículo (motor, transmisión, carrocería, etc.).
 - **Centralizar** los archivos DBC generados/modificados para cada modelo de vehículo.
@@ -32,25 +32,16 @@ DBC-reverse-engineering/
 
 ---
 
-## 🚘 Vehículos disponibles
+## Vehículos disponibles
 
 | Vehículo | Carpeta | Estado |
 |---|---|---|
-| VW Passat CC 2012 | [`vw-passat-cc-2012/`](./vw-passat-cc-2012/) | 🔬 En progreso |
+| VW Passat CC 2012 | [`vw-passat-cc-2012/`](./vw-passat-cc-2012/) | En progreso |
 
-> ¿Querés agregar un vehículo? Creá una carpeta siguiendo la estructura anterior y abrí un Pull Request.
 
----
-
-## 🛠️ Herramientas recomendadas
+## Herramientas recomendadas
 
 - **[SavvyCAN](https://github.com/collin80/SavvyCAN)** — captura y visualización de tramas CAN.
 - **[cantools](https://github.com/eerimoq/cantools)** — manipulación y decodificación de archivos DBC en Python.
-- **[Vector CANdb++](https://www.vector.com/int/en/products/products-a-z/software/candb/)** — editor DBC profesional.
 - **[python-can](https://python-can.readthedocs.io/)** — librería Python para interfaces CAN.
-
 ---
-
-## 📜 Licencia
-
-Este proyecto se distribuye bajo la licencia [MIT](LICENSE). Los datos documentados son resultado de ingeniería inversa con fines educativos y de investigación.
