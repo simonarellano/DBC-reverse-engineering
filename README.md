@@ -1,47 +1,47 @@
 # DBC Reverse Engineering — CAN Bus
 
-Repositorio para documentar hallazgos de ingeniería inversa sobre las líneas CAN bus de distintos vehículos. El objetivo principal es capturar, decodificar y compartir el significado de los mensajes CAN (IDs, señales, valores) de cada vehículo analizado.
+Repository for documenting reverse engineering findings on the CAN bus lines of various vehicles. The main goal is to capture, decode, and share the meaning of CAN messages (IDs, signals, values) for each analyzed vehicle.
 
 ---
 
-## Objetivos
+## Goals
 
-- **Documentar** los IDs CAN y las señales identificadas en cada vehículo (motor, transmisión, carrocería, etc.).
-- **Centralizar** los archivos DBC generados/modificados para cada modelo de vehículo.
-- **Proveer scripts** de apoyo (Python, C++) que faciliten la captura, filtrado y análisis de tramas CAN.
-- **Fomentar** el conocimiento abierto sobre los protocolos internos de los vehículos modernos.
+- **Document** CAN IDs and identified signals in each vehicle (engine, transmission, body, etc.).
+- **Centralize** the DBC files generated/modified for each vehicle model.
+- **Provide support scripts** (Python, C++) to facilitate the capture, filtering, and analysis of CAN frames.
+- **Promote** open knowledge about the internal protocols of modern vehicles.
 
 ---
 
-## 📁 Estructura del repositorio
+## 📁 Repository Structure
 
 ```
 DBC-reverse-engineering/
 │
-├── <vehiculo>/              # Una carpeta por cada vehículo analizado
-│   ├── docs/                # Documentación Markdown (hallazgos por ID o sistema)
-│   │   ├── motor.md
-│   │   └── transmision.md
-│   ├── dbc/                 # Archivos DBC oficiales y sus versiones
-│   │   └── vehiculo_v1.dbc
-│   ├── scripts/             # Scripts de análisis (Python, C++, etc.)
-│   └── README.md            # Portada del vehículo: resumen, herramientas y estado
+├── <vehicle>/               # One folder per analyzed vehicle
+│   ├── docs/                # Markdown documentation (findings by ID or system)
+│   │   ├── engine.md
+│   │   └── transmission.md
+│   ├── dbc/                 # Official DBC files and their versions
+│   │   └── vehicle_v1.dbc
+│   ├── scripts/             # Analysis scripts (Python, C++, etc.)
+│   └── README.md            # Vehicle overview: summary, tools, and status
 │
-└── README.md                # Este archivo — visión general del proyecto
+└── README.md                # This file — project overview
 ```
 
 ---
 
-## Vehículos disponibles
+## Available Vehicles
 
-| Vehículo | Carpeta | Estado |
+| Vehicle | Folder | Status |
 |---|---|---|
-| VW Passat CC 2012 | [`vw-passat-cc-2012/`](./vw-passat-cc-2012/) | En progreso |
+| VW Passat CC 2012 | [`vw-passat-cc-2012/`](./vw-passat-cc-2012/) | In progress |
 
 
-## Herramientas recomendadas
+## Recommended Tools
 
-- **[SavvyCAN](https://github.com/collin80/SavvyCAN)** — captura y visualización de tramas CAN.
-- **[cantools](https://github.com/eerimoq/cantools)** — manipulación y decodificación de archivos DBC en Python.
-- **[python-can](https://python-can.readthedocs.io/)** — librería Python para interfaces CAN.
+- **[SavvyCAN](https://github.com/collin80/SavvyCAN)** — CAN frame capture and visualization.
+- **[cantools](https://github.com/eerimoq/cantools)** — DBC file manipulation and decoding in Python.
+- **[python-can](https://python-can.readthedocs.io/)** — Python library for CAN interfaces.
 ---

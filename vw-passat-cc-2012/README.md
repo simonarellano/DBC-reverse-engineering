@@ -1,45 +1,45 @@
 # 🚗 VW Passat CC 2012 — CAN Bus Reverse Engineering
 
-## Información del vehículo
+## Vehicle Information
 
-| Campo | Detalle |
+| Field | Detail |
 |---|---|
-| Marca | Volkswagen |
-| Modelo | Passat CC |
-| Año | 2012 |
-| Protocolo CAN | CAN 2.0B (High-Speed, 500 kbps) |
-| Estado del análisis | 🔬 En progreso |
+| Make | Volkswagen |
+| Model | Passat CC |
+| Year | 2012 |
+| CAN Protocol | CAN 2.0B (High-Speed, 500 kbps) |
+| Analysis Status | 🔬 In progress |
 
 ---
 
-## 📂 Contenido de esta carpeta
+## 📂 Folder Contents
 
-| Carpeta / Archivo | Descripción |
+| Folder / File | Description |
 |---|---|
-| [`docs/motor.md`](./docs/motor.md) | Hallazgos de los IDs CAN relacionados con el motor |
-| [`docs/transmision.md`](./docs/transmision.md) | Hallazgos de los IDs CAN relacionados con la transmisión |
-| [`dbc/passat_cc_2012_v1.dbc`](./dbc/passat_cc_2012_v1.dbc) | Archivo DBC con las señales identificadas hasta el momento |
-| [`scripts/`](./scripts/) | Scripts de captura y análisis |
+| [`docs/engine.md`](./docs/engine.md) | Findings for CAN IDs related to the engine |
+| [`docs/transmission.md`](./docs/transmission.md) | Findings for CAN IDs related to the transmission |
+| [`dbc/passat_cc_2012_v1.dbc`](./dbc/passat_cc_2012_v1.dbc) | DBC file with identified signals so far |
+| [`scripts/`](./scripts/) | Capture and analysis scripts |
 
 ---
 
-## 🛠️ Herramientas utilizadas
+## 🛠️ Tools Used
 
-- **SavvyCAN** para la captura de tramas.
-- **cantools** (Python) para decodificación y validación de señales.
-- Interfaz CAN: *[completar con el adaptador utilizado, p.ej. Peak PCAN-USB]*
-
----
-
-## 📝 Notas generales
-
-- El bus de alta velocidad (HS-CAN) opera a **500 kbps**.
-- Los IDs documentados se capturaron con el vehículo en distintas condiciones de marcha.
-- Los archivos DBC son versiones de trabajo y pueden contener señales sin validar.
+- **SavvyCAN** for frame capture.
+- **cantools** (Python) for signal decoding and validation.
+- CAN Interface: *[fill in with the adapter used, e.g. Peak PCAN-USB]*
 
 ---
 
-## 🔗 Referencias
+## 📝 General Notes
+
+- The high-speed bus (HS-CAN) operates at **500 kbps**.
+- The documented IDs were captured with the vehicle under various driving conditions.
+- DBC files are working versions and may contain unvalidated signals.
+
+---
+
+## 🔗 References
 
 - [Ross-Tech Wiki — VW/Audi CAN buses](https://wiki.ross-tech.com/)
 - [OpenGarages — Vehicle Hacker's Handbook](https://opengarages.org/)
