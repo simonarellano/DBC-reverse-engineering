@@ -1,4 +1,4 @@
-# 🚗 VW Passat CC 2012 — CAN Bus Reverse Engineering
+# VW Passat CC 2012 — CAN Bus Reverse Engineering
 
 ## Vehicle Information
 
@@ -12,7 +12,7 @@
 
 ---
 
-## 📂 Folder Contents
+## Folder Contents
 
 | Folder / File | Description |
 |---|---|
@@ -23,7 +23,7 @@
 
 ---
 
-## 🛠️ Tools Used
+## Tools Used
 
 - **SavvyCAN** for frame capture.
 - **cantools** (Python) for signal decoding and validation.
@@ -31,7 +31,7 @@
 
 ---
 
-## 📝 General Notes
+## General Notes
 
 - The high-speed bus (HS-CAN) operates at **500 kbps**.
 - The documented IDs were captured with the vehicle under various driving conditions.
@@ -39,7 +39,3 @@
 
 ---
 
-## 🔗 References
-
-- [Ross-Tech Wiki — VW/Audi CAN buses](https://wiki.ross-tech.com/)
-- [OpenGarages — Vehicle Hacker's Handbook](https://opengarages.org/)
