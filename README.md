@@ -8,7 +8,7 @@ Repository for documenting reverse engineering findings on the CAN bus lines of 
 
 - **Document** CAN IDs and identified signals in each vehicle (engine, transmission, body, etc.).
 - **Centralize** the DBC files generated/modified for each vehicle model.
-- **Provide support scripts** (Python, C++) to facilitate the capture, filtering, and analysis of CAN frames.
+- **Provide support scripts** (Python) to facilitate the capture, filtering, and analysis of CAN frames.
 - **Promote** open knowledge about the internal protocols of modern vehicles.
 
 ---
