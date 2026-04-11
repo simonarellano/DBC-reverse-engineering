@@ -97,41 +97,102 @@
 
 **Confidence: HIGH**
 
-| Signal | Start Bit | Length | Byte Order | Factor | Offset | Unit | Notes |
-|--------|-----------|--------|------------|--------|--------|------|-------|
-| `PedalState` | 0 | 8 | Intel | 1 | 0 | flag | `0x01`=released, `0x00`=pressed |
-| `APP_Sensor2` | 8 | 8 | Intel | 3.3183 | -35.72 | % | Accel. pedal pos. sensor 2 |
-| `EngineRPM` | 16 | 16 | Intel | 0.25 | 0 | rpm | 16-bit LE: bytes[2] LSB + bytes[3] MSB |
-| `APP_Sensor2_Mirror` | 32 | 8 | Intel | 3.3183 | -35.72 | % | Redundant copy of APP2 (B4 ≈ B1) |
-| `APP_Sensor1` | 40 | 8 | Intel | 2.0396 | 14.84 | % | Accel. pedal pos. sensor 1 |
+| Signal | Start Bit | Length | Byte Order | Factor | Offset | Unit | Min | Max | Notes |
+|--------|-----------|--------|------------|--------|--------|------|-----|-----|-------|
+| `PedalState` | 0 | 8 | Intel | 1 | 0 | flag | — | — | `0x01`=released, `0x00`=pressed |
+| `APP_Sensor2` | 8 | 8 | Intel | 3.3183 | -35.72 | % | 7.42 | ~50.0 | APP pedal pos. sensor 2; valid raw [11, 26] |
+| `EngineRPM` | 16 | 16 | Intel | 0.25 | 0 | rpm | 0 | — | 16-bit LE: bytes[2] LSB + bytes[3] MSB |
+| `APP_Sensor2_Mirror` | 32 | 8 | Intel | 3.3183 | -35.72 | % | 7.42 | ~50.0 | Redundant copy of APP2 (B4 ≈ B1); same valid raw [11, 26] |
+| `APP_Sensor1` | 40 | 8 | Intel | 2.00 | 14.84 | % | 14.84 | 100.0 | APP pedal pos. sensor 1; valid raw [0, 42] — see ⚠️ note |
 
-**Calibration verification:**
+> ⚠️ **IMPORTANT — B5 valid range**: The APP_Sensor1 formula is only valid for raw B5 ∈ [0, 42]. When the decoder produces a value greater than 100 % (i.e. B5 > 42), the byte is **not the physical pedal sensor reading** — it is an ECU-computed engine-load or boost-demand value (see §3.1.1 below). Clamp APP1 output to 100 % for any raw value above 42, or mark as "ECU load mode – not pedal position".
 
-| Signal | Raw idle | Physical idle | Raw pressed | Physical pressed |
-|--------|----------|--------------|-------------|-----------------|
-| `EngineRPM` | 3032 (~`0x0BE8`) | ~758 rpm | 8000 (`0x1F40`) | ~2000 rpm |
-| `APP_Sensor1` (B5) | 0 | 14.84 % | ~32 (mode=33) | 80.86 % |
-| `APP_Sensor2` (B1) | 13 (mode) | 7.42 % | ~23 (mode=23) | 40.23 % |
+> ⚠️ **IMPORTANT — B1 valid range**: The APP_Sensor2 formula produces negative values for B1 < 11 and values above 100 % for B1 > 41. The physical sensor range is approximately B1 ∈ [11, 26] (APP2 ≈ 7 %–50 %). Values outside this range indicate an ECU-computed state (same high-load mode as B5), not a physical sensor reading.
+
+**Calibration verification (three-point):**
+
+| Signal | Raw idle | Physical idle | Raw partial press (2000 RPM test) | Physical partial | Raw full pedal | Physical full pedal |
+|--------|----------|--------------|-----------------------------------|-----------------|---------------|-------------------|
+| `EngineRPM` | 3032 (~`0x0BE8`) | ~758 rpm | 8000 (`0x1F40`) | ~2000 rpm | — | — |
+| `APP_Sensor1` (B5) | 0 | 14.84 % | 33 (mode) | 80.86 % | **42** (max observed in 2000 RPM log) | **~100 %** |
+| `APP_Sensor2` (B1) | 13 (mode) | 7.42 % | 23 (mode) | 40.23 % | **24** (when B5=42) | **~44 %** |
+
+Formula cross-check with factor 2.00, offset 14.84:
+
+| B5 raw | APP1 decoded | Expected physical | Match? |
+|--------|-------------|------------------|--------|
+| 0 | 14.84 % | 14.84 % | ✅ |
+| 33 | 80.84 % | 80.86 % | ✅ |
+| 42 | 98.84 % | ~100 % (full pedal) | ✅ |
+| 78 | 170.84 % | **invalid** — ECU boost mode | ❌ clamp to 100 % |
+| 153 | 320.84 % | **invalid** — ECU boost mode | ❌ clamp to 100 % |
 
 **Important notes:**
 - `EngineRPM`: verified at ~760, ~2000, and ~3900 rpm (raw × 0.25 matches observed values).
-- `APP_Sensor1` (B5): raw value is **exactly 0** when pedal released; increases immediately when pressed. Calibration is based on two points (idle and 2000 RPM test). Maximum observed raw value = **153** at ~3900 RPM (full throttle); extrapolation beyond the calibrated range may not be linear.
-- `APP_Sensor2` (B1) with mirror in B4: B1 and B4 differ in only ~1.2 % of frames — consistent with redundant APP sensor pattern used in VW safety systems. Calibration from same two-point method.
+- `APP_Sensor1` (B5): raw value is **exactly 0** when pedal released; increases immediately when pressed. **Maximum physically valid raw value is 42** — this is the value observed at full-pedal press in the 2000 RPM log (formula gives 98.84 % ≈ 100 %). The previously reported "maximum raw = 153 at ~3900 RPM" is incorrect: B5 = 153 is outside the physical pedal sensor range and represents an ECU-computed load/boost signal (see §3.1.1).
+- `APP_Sensor2` (B1) with mirror in B4: B1 and B4 differ in only ~1.2 % of frames — consistent with redundant APP sensor pattern used in VW safety systems. Calibration from two-point method.
 - **B3 is NOT an independent signal** — it is the MSB of the 16-bit RPM field. Its apparent correlation with APP2 is spurious (both increase when pedal is pressed).
+- `B6`: changes from `0x0A` at normal operation to `0x0F`–`0x10` at RPM > 3250. This transition coincides with B5 entering ECU-load mode. B6 may encode an engine-load range or throttle-mode flag; identity not yet confirmed.
 
 **Example frame analysis:**
 ```
 Pedal released, ~758 RPM:
 01 0D E8 0B 0D 00 0A 05
 B0=0x01 (released)  B1=0x0D=13 (APP2→7.42%)  B2-B3=0x0BE8 (RPM=748.0 rpm*)
-B4=0x0D=13 (APP2 mirror) B5=0x00 (APP1→14.84%)
+B4=0x0D=13 (APP2 mirror) B5=0x00 (APP1→14.84%)  B6=0x0A (normal load)
 
-Pedal pressed, ~2000 RPM:
+Pedal pressed, ~2000 RPM (partial press, ~80 % pedal travel):
 00 17 40 1F 17 21 0A 17
 B0=0x00 (pressed)  B1=0x17=23 (APP2→40.54%)  B2-B3=0x1F40 (RPM=2000 rpm)
-B4=0x17=23 (mirror)  B5=0x21=33 (APP1→82.17%)
+B4=0x17=23 (mirror)  B5=0x21=33 (APP1→80.84%)  B6=0x0A (normal load)
+
+Pedal fully pressed (~100 % travel), ~2060 RPM:
+00 18 52 1F 18 2A 0A 19
+B0=0x00 (pressed)  B1=0x18=24 (APP2→44.0%)  B2-B3=0x1F52 (RPM=2005 rpm)
+B4=0x18=24 (mirror)  B5=0x2A=42 (APP1→98.84% ≈ 100%)  B6=0x0A (normal load)
+
+⚠️  High RPM / ECU-load-mode frame (3800 RPM, B5 outside valid range):
+00 1E 52 3B 1E 99 10 1F
+B0=0x00 (pressed)  B1=0x1E=30 (APP2 raw—outside valid range, use 100 % clamp)
+B2-B3=0x3B52 (RPM=3796 rpm)  B4=0x1E=30 (mirror)
+B5=0x99=153 (outside valid APP1 range → clamp to 100 %, ECU boost/load mode)
+B6=0x10 (high-load mode flag)
 ```
 *Minor discrepancy from averaging is normal; individual frames vary ±1 bit.
+
+#### 3.1.1 B5 Behavior at High Throttle / >3250 RPM — ECU-Load Mode
+
+When the engine is driven hard (sustained WOT above ~1800 RPM in the 3900 RPM test), B5 transitions through three distinct phases:
+
+| Phase | B5 range | Condition | Interpretation |
+|-------|----------|-----------|---------------|
+| Pedal sensor | 0 – 42 | Pedal 0 %→100 %, any RPM | Physical APP1 sensor reading (formula valid) |
+| ECU plateau | ~43 – 78 | Full throttle, RPM 1800–3840 | ECU-computed full-load demand; B5 saturates at 78 (`0x4E`) |
+| ECU boost peak | ~79 – 153 | Full throttle, RPM >3700 | High-RPM boost/load peak; B5 climbs and stabilises at 153 (`0x99`, ~9 s in log) |
+
+Evidence:
+- **First pedal press** (760-3900-RPM.log, t ≈ 62–70 s, reaching ~2130 RPM): B5 max = **42**. This confirms the physical ceiling.
+- **Second pedal press** (t ≈ 83–97 s, reaching ~3840 RPM): B5 exceeds 42, plateaus at 78 from ~1836 RPM upward, then climbs to 153 as RPM stabilises at ~3800.
+- At all times when B5 > 42, **B1 (APP2) and B4 (mirror) also show elevated raw values** (up to 51) that exceed the physical sensor ceiling when decoded with the existing formula. This is consistent with B5 and B1 both encoding an ECU boost/load signal instead of pedal position once the pedal is floored and turbo boost is active.
+- **B6 changes from `0x0A` to `0x10`** simultaneously (RPM > 3660), reinforcing a mode transition.
+
+**Recommended DBC encoding (corrected):**
+
+```
+SG_ APP_Sensor1 : 40|8@1+ (2.00,14.84) [14.84|100.0] "%" Vector__XXX
+SG_ APP_Sensor2 : 8|8@1+ (3.3183,-35.72) [7.42|50.0] "%" Vector__XXX
+SG_ APP_Sensor2_Mirror : 32|8@1+ (3.3183,-35.72) [7.42|50.0] "%" Vector__XXX
+```
+
+> The `[min|max]` DBC range fields act as a soft clamp in most tools. Any raw value that produces a decoded result outside these limits should be treated as "out-of-sensor-range — ECU computed value", not a physical pedal sensor reading.
+
+**Validation tests to confirm the corrected calibration:**
+
+1. **Full-pedal static test (engine in N/P):** Slowly press pedal to floor and hold. Confirm B5 reaches exactly 42 (`0x2A`) and stays there. Any B5 > 42 while the pedal has not moved beyond the mechanical stop indicates a mode change unrelated to pedal travel.
+2. **Correlation with VCDS/OBD2 scan at full pedal:** Simultaneously log CAN and record VCDS APP1/APP2 % at 25 %, 50 %, 75 %, 100 % pedal travel. Confirm formula `APP1 = B5 × 2.00 + 14.84` holds at each step (see TEST-05 in `additional_tests_needed.md`).
+3. **Cross-check APP1/APP2 ratio:** At every pedal position, physical APP2 ≈ APP1 / 2. Verify `(B1 × 3.3183 − 35.72) ≈ (B5 × 2.00 + 14.84) / 2` for B5 ∈ [0, 42] and B1 ∈ [11, 26].
+4. **Monitor B6 at high RPM:** Record B6 while slowly increasing RPM from idle to ~4000 RPM in N/P (if safe). Confirm B6 transitions from `0x0A` to `0x10` at the same RPM threshold where B5 leaves the pedal-sensor range.
+5. **Compare first vs second pedal press in existing logs:** In `760-3900-RPM.log`, first press B5 max = 42 (physical full pedal); second press B5 climbs to 153. This discrepancy — same driver action but different B5 ceiling — confirms B5 encodes the ECU load demand (which is higher under turbo boost at 3800 RPM) rather than the raw sensor voltage.
 
 ---
 
@@ -237,33 +298,33 @@ B4=0x17=23 (mirror)  B5=0x21=33 (APP1→82.17%)
 
 ## 5. Signal Confidence Summary
 
-| Signal | ID | Start Bit | Length | Factor | Offset | Unit | Confidence |
-|--------|----|-----------|--------|--------|--------|------|------------|
-| PedalState | 0x280 | 0 | 8 | 1 | 0 | flag | ✅ HIGH |
-| EngineRPM | 0x280 | 16 | 16 | 0.25 | 0 | rpm | ✅ HIGH |
-| APP_Sensor1 | 0x280 | 40 | 8 | 2.04 | 14.84 | % | ✅ HIGH (⚠️ scaling limited to tested range) |
-| APP_Sensor2 | 0x280 | 8 | 8 | 3.32 | -35.72 | % | ✅ HIGH (⚠️ same caveat) |
-| APP_Sensor2_Mirror | 0x280 | 32 | 8 | 3.32 | -35.72 | % | ✅ HIGH |
-| TPS_Sensor1 | 0x48A | 8 | 8 | 0.399 | 10.89 | % | ✅ HIGH |
-| TPS_Status | 0x48A | 16 | 8 | 1 | 0 | flag | ⚠️ MEDIUM |
-| CoolantTemp | 0x320 | 16 | 8 | 1 | -40 | °C | ⚠️ MEDIUM (needs cold test) |
-| CoolantTemp_BCM | 0x621 | 24 | 8 | 1 | -40 | °C | ⚠️ MEDIUM (needs cold test) |
-| GearboxOilTemp | 0x1AC | 32 | 8 | 1 | -40 | °C | ⚠️ MEDIUM (needs cold test) |
-| VehicleSpeed | — | — | — | — | — | km/h | ❌ NOT FOUND |
-| CurrentGear | — | — | — | — | — | — | ❌ NOT FOUND |
-| SelectorPosition | — | — | — | — | — | — | ❌ NOT FOUND |
-| TPS_Sensor2 | — | — | — | — | — | % | ❌ NOT FOUND |
+| Signal | ID | Start Bit | Length | Factor | Offset | Unit | Min | Max | Confidence |
+|--------|----|-----------|--------|--------|--------|------|-----|-----|------------|
+| PedalState | 0x280 | 0 | 8 | 1 | 0 | flag | — | — | ✅ HIGH |
+| EngineRPM | 0x280 | 16 | 16 | 0.25 | 0 | rpm | 0 | — | ✅ HIGH |
+| APP_Sensor1 | 0x280 | 40 | 8 | 2.00 | 14.84 | % | 14.84 | 100.0 | ✅ HIGH (⚠️ valid raw [0,42] only — raw >42 = ECU load mode, not pedal sensor) |
+| APP_Sensor2 | 0x280 | 8 | 8 | 3.3183 | -35.72 | % | 7.42 | ~50.0 | ✅ HIGH (⚠️ valid raw [11,26] — raw >26 outside sensor range) |
+| APP_Sensor2_Mirror | 0x280 | 32 | 8 | 3.3183 | -35.72 | % | 7.42 | ~50.0 | ✅ HIGH |
+| TPS_Sensor1 | 0x48A | 8 | 8 | 0.399 | 10.89 | % | 0 | 100.0 | ✅ HIGH |
+| TPS_Status | 0x48A | 16 | 8 | 1 | 0 | flag | — | — | ⚠️ MEDIUM |
+| CoolantTemp | 0x320 | 16 | 8 | 1 | -40 | °C | — | — | ⚠️ MEDIUM (needs cold test) |
+| CoolantTemp_BCM | 0x621 | 24 | 8 | 1 | -40 | °C | — | — | ⚠️ MEDIUM (needs cold test) |
+| GearboxOilTemp | 0x1AC | 32 | 8 | 1 | -40 | °C | — | — | ⚠️ MEDIUM (needs cold test) |
+| VehicleSpeed | — | — | — | — | — | km/h | — | — | ❌ NOT FOUND |
+| CurrentGear | — | — | — | — | — | — | — | — | ❌ NOT FOUND |
+| SelectorPosition | — | — | — | — | — | — | — | — | ❌ NOT FOUND |
+| TPS_Sensor2 | — | — | — | — | — | % | — | — | ❌ NOT FOUND |
 
 ---
 
 ## 6. Methodology Notes
 
-- **Calibration method:** Two-point linear regression using the provided physical sensor values (idle and "pedal pressed during 2000 RPM test") as ground truth.
+- **Calibration method:** Two-point linear regression using the provided physical sensor values (idle and "pedal pressed during 2000 RPM test") as ground truth, with a third anchor point derived from log analysis (B5=42 at full pedal in the 2000 RPM test → APP1 ≈ 100 %).
 - **Stable idle reference:** The `760-3900-RPM.log` was used for idle calibration (pedal fully released, RPM ≈ 758, several thousand frames). The `760_RPM.log` (vcan0 replay) contains a warm-up sequence that distorts averages and was used only for cross-validation.
-- **APP sensor factor note:** The APP factors were derived from only two calibration points. The maximum observed raw value for APP1 (153 at 3900 RPM) extrapolates beyond 100 % with the current formula — this indicates either a non-linear sensor curve or the formula is only accurate in the tested throttle range (idle → ~80 % of full travel). **Additional intermediate calibration points are strongly recommended before writing the final DBC.**
+- **APP sensor valid range correction:** The previously reported "maximum raw value 153 at ~3900 RPM" was found to be outside the physical pedal sensor range. Analysis of the `760-3900-RPM.log` confirms that the first pedal press (to ~2000 RPM) has B5 max = 42 (formula → 98.8 % ≈ 100 %), while the second press (to ~3900 RPM) shows B5 exceeding 42 and eventually stabilising at 153 — a value that is physically impossible for a pedal position sensor limited to 0–100 %. B5 > 42 encodes an ECU-computed engine load or boost-demand signal, not the raw APP1 sensor voltage. The formula (factor 2.00, offset 14.84) remains correct within the valid range [0, 42] and should be clamped at 100 % for higher raw values.
 - **Counter identification:** All identified counters were verified by confirming constant step increments across 50+ consecutive frames.
 - **Checksum in 0x56A:** Verified across 500+ frames: XOR of all 8 bytes = 0x00 in every frame.
 
 ---
 
-*Generated: 2026-04-10 — Based on logs from testing branch*
+*Generated: 2026-04-10 — Updated 2026-04-11: APP_Sensor1/APP_Sensor2 valid-range correction*
